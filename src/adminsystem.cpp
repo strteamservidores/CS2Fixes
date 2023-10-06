@@ -1,3 +1,22 @@
+/**
+ * =============================================================================
+ * CS2Fixes
+ * Copyright (C) 2023 Source2ZE
+ * =============================================================================
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License, version 3.0, as published by the
+ * Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "protobuf/generated/usermessages.pb.h"
 
 #include "adminsystem.h"
@@ -71,7 +90,7 @@ CON_COMMAND_CHAT(ban, "ban a player")
 	int iNumClients = 0;
 	int pSlot[MAXPLAYERS];
 
-	if (g_playerManager->TargetPlayerString(args[1], iNumClients, pSlot) != ETargetType::PLAYER || iNumClients > 1)
+	if (g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlot) != ETargetType::PLAYER || iNumClients > 1)
 	{
 		ClientPrint(player, HUD_PRINTTALK, " \7[CS2Fixes]\1 Target too ambiguous.");
 		return;
@@ -138,7 +157,7 @@ CON_COMMAND_CHAT(mute, "mutes a player")
 	int iNumClients = 0;
 	int pSlot[MAXPLAYERS];
 
-	g_playerManager->TargetPlayerString(args[1], iNumClients, pSlot);
+	g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlot);
 
 	if (!iNumClients)
 	{
@@ -201,7 +220,7 @@ CON_COMMAND_CHAT(kick, "kick a player")
 	int iNumClients = 0;
 	int pSlot[MAXPLAYERS];
 
-	g_playerManager->TargetPlayerString(args[1], iNumClients, pSlot);
+	g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlot);
 
 	if (!iNumClients)
 	{
@@ -248,7 +267,7 @@ CON_COMMAND_CHAT(slay, "slay a player")
 	int iNumClients = 0;
 	int pSlots[MAXPLAYERS];
 
-	g_playerManager->TargetPlayerString(args[1], iNumClients, pSlots);
+	g_playerManager->TargetPlayerString(iCommandPlayer, args[1], iNumClients, pSlots);
 
 	if (!iNumClients)
 	{
