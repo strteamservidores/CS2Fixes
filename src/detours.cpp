@@ -6,6 +6,7 @@
 #include "interfaces/cs2_interfaces.h"
 #include "detours.h"
 #include "ctimer.h"
+#include "irecipientfilter.h"
 #include "entity/ccsplayercontroller.h"
 #include "entity/ccsplayerpawn.h"
 #include "entity/cbasemodelentity.h"
@@ -15,6 +16,7 @@
 #include "tier0/memdbgon.h"
 
 extern CGlobalVars *gpGlobals;
+extern CEntitySystem *g_pEntitySystem;
 
 DECLARE_DETOUR(Host_Say, Detour_Host_Say, &modules::server);
 DECLARE_DETOUR(UTIL_SayTextFilter, Detour_UTIL_SayTextFilter, &modules::server);
@@ -42,7 +44,8 @@ void FASTCALL Detour_CSoundEmitterSystem_EmitSound(ISoundEmitterSystemBase *pSou
 
 bool FASTCALL Detour_IsHearingClient(void* serverClient, int index)
 {
-	if (g_playerManager->GetPlayer(index)->IsMuted())
+	ZEPlayer* player = g_playerManager->GetPlayer(index);
+	if (player && player->IsMuted())
 		return false;
 
 	return IsHearingClient(serverClient, index);
@@ -52,11 +55,6 @@ void FASTCALL Detour_UTIL_SayTextFilter(IRecipientFilter &filter, const char *pT
 {
 	int entindex = filter.GetRecipientIndex(0).Get();
 	CCSPlayerController *target = (CCSPlayerController *)g_pEntitySystem->GetBaseEntity((CEntityIndex)entindex);
-
-#ifdef _DEBUG
-	if (target)
-		Message("Chat from %s to %s: %s\n", pPlayer ? &pPlayer->m_iszPlayerName() : "console", &target->m_iszPlayerName(), pText);
-#endif
 
 	if (pPlayer)
 		return UTIL_SayTextFilter(filter, pText, pPlayer, eMessageType);
@@ -88,20 +86,13 @@ void FASTCALL Detour_UTIL_SayText2Filter(
 	UTIL_SayText2Filter(filter, pEntity, eMessageType, msg_name, param1, param2, param3, param4);
 }
 
-void FASTCALL Detour_Host_Say(CCSPlayerController *pController, CCommand *args, bool teamonly, int unk1, const char *unk2)
+void FASTCALL Detour_Host_Say(CCSPlayerController *pController, CCommand &args, bool teamonly, int unk1, const char *unk2)
 {
-	Host_Say(pController, args, teamonly, unk1, unk2);
+	if (args.ArgC() < 2 || *args[1] != '/')
+		Host_Say(pController, args, teamonly, unk1, unk2);
 
-	if (g_pEntitySystem == nullptr)
-		g_pEntitySystem = interfaces::pGameResourceServiceServer->GetGameEntitySystem();
-
-	const char *pMessage = args->Arg(1);
-
-	if (*pMessage == '!' || *pMessage == '/')
-		ParseChatCommand(pMessage, pController);
-
-	if (*pMessage == '/')
-		return;
+	if (*args[1] == '!' || *args[1] == '/')
+		ParseChatCommand(args[1], pController);
 }
 
 void Detour_Log()
